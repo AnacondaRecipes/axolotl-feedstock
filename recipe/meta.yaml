@@ -13,7 +13,9 @@ build:
   number: 0
   # axolotl's hard deps triton / fla-core / liger-kernel / flash-linear-attention
   # are only available on linux-64 on pkgs/main, so build there only.
-  skip: true  # [not linux64]
+  # py3.10 is skipped: axolotl requires numpy >=2.2.6, but numpy 2.3 dropped
+  # py3.10 support so pkgs/main has no numpy >=2.2.6 for py3.10 (max is 2.2.5).
+  skip: true  # [not linux64 or py<311]
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
   entry_points:
     - axolotl = axolotl.cli.main:main
@@ -89,7 +91,11 @@ requirements:
     - bitsandbytes ==0.49.1
     - triton >=3.4.0
     - xformers >=0.0.33.post2
-    - liger-kernel ==0.7.0
+    # relaxed from upstream ==0.7.0: axolotl co-pins trl ==1.5.1, whose `liger`
+    # extra requires liger-kernel >=0.8.0. pip hides the clash (extras are
+    # opt-in) but conda's run_constrained enforces it, so 0.7.0 is unusable
+    # alongside trl 1.5.1. pkgs/main ships liger-kernel 0.8.0.
+    - liger-kernel >=0.8.0
     - torchao ==0.17.0
     - fla-core ==0.4.1
     - flash-linear-attention ==0.4.1

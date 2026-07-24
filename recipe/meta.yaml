@@ -39,7 +39,13 @@ requirements:
     - datasets >=4.8.4,<4.9.0
     - trl ==1.5.1
     - hf-xet ==1.4.3
-    - kernels ==0.13.0
+    # kernels dropped: upstream pins kernels ==0.13.0, but co-pinned
+    # transformers 5.9.0 requires kernels >=0.12.0,<0.13 (via its `kernels`
+    # extra → run_constrained), which is disjoint from 0.13.0. pip hides the
+    # clash (extras opt-in); conda's run_constrained enforces it. axolotl never
+    # imports the HF `kernels` package (its own integrations/kernels is a local
+    # module), and kernels is optional for transformers, so it is omitted here —
+    # transformers' run_constrained still governs it if a user installs it.
     - trackio >=0.16.1
     - typing_extensions >=4.15.0
     # optimum: relaxed from upstream's ==1.16.2 — axolotl only imports

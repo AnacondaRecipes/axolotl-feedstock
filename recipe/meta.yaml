@@ -1,0 +1,123 @@
+{% set name = "axolotl" %}
+{% set version = "0.17.0" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  sha256: 3bb4ce6d8158a2b598560808d8fe5148081f79eeba7e1bd649fe3211f0c87733
+
+build:
+  number: 0
+  # axolotl's hard deps triton / fla-core / liger-kernel / flash-linear-attention
+  # are only available on linux-64 on pkgs/main, so build there only.
+  skip: true  # [not linux64]
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  entry_points:
+    - axolotl = axolotl.cli.main:main
+
+requirements:
+  host:
+    - python
+    - pip
+    - setuptools >=64
+    - setuptools_scm >=8
+    - wheel
+  run:
+    - python
+    - pytorch >=2.9.1
+    - packaging ==26.0
+    - huggingface_hub >=1.1.7
+    - peft >=0.19.1,<0.20.0
+    - tokenizers >=0.22.1
+    - transformers ==5.9.0
+    - accelerate ==1.13.0
+    - datasets >=4.8.4,<4.9.0
+    - trl ==1.5.1
+    - hf-xet ==1.4.3
+    - kernels ==0.13.0
+    - trackio >=0.16.1
+    - typing_extensions >=4.15.0
+    # optimum: relaxed from upstream's ==1.16.2 — axolotl only imports
+    # optimum.bettertransformer under `if cfg.flash_optimum:` (a lazy, deprecated
+    # path removed in optimum 2.0); the base package works with newer optimum.
+    - optimum >=1.16.2
+    - hf-transfer
+    - sentencepiece
+    - gradio >=6.2.0,<7.0
+    - modal-client ==1.3.0.post1
+    - pydantic >=2.10.6
+    - addict
+    - fire
+    - pyyaml >=6.0
+    - requests
+    - wandb
+    - einops
+    - colorama
+    - numba >=0.61.2
+    - numpy >=2.2.6
+    - typer <0.26.0
+    - evaluate ==0.4.1
+    - scipy
+    # relaxed from upstream ==12.560.30: only stable pynvml bindings are used
+    - nvidia-ml-py >=12.560.30
+    - art
+    - tensorboard
+    # relaxed from upstream ==1.0.1: only load_dotenv is used
+    - python-dotenv >=1.0.1
+    - s3fs >=2024.5.0
+    - gcsfs >=2025.3.0
+    - adlfs >=2024.5.0
+    - ocifs ==1.3.2
+    - zstandard ==0.22.0
+    - fastcore
+    - lm_eval ==0.4.11
+    - langdetect ==1.0.9
+    # relaxed from upstream ==4.2.0: transitive-only, not imported by axolotl
+    - immutabledict >=4.2.0
+    - antlr4-python3-runtime ==4.13.2
+    - schedulefree ==1.4.1
+    - openenv-core ==0.1.0
+    - axolotl-contribs-lgpl ==0.0.7
+    - axolotl-contribs-mit ==0.0.6
+    # relaxed from upstream ==6.7.11: module-level API used is preserved in 7.x
+    - posthog >=6.7.11
+    # relaxed from upstream ==1.11.0: stable validator/tokenizer APIs, patch diff
+    - mistral-common >=1.11.0,<2
+    - bitsandbytes ==0.49.1
+    - triton >=3.4.0
+    - xformers >=0.0.33.post2
+    - liger-kernel ==0.7.0
+    - torchao ==0.17.0
+    - fla-core ==0.4.1
+    - flash-linear-attention ==0.4.1
+
+test:
+  imports:
+    - axolotl
+  commands:
+    - pip check
+    - axolotl --help
+  requires:
+    - pip
+
+about:
+  home: https://axolotl.ai/
+  summary: Axolotl is a tool designed to streamline post-training for various AI models
+  description: |
+    Axolotl is a tool designed to streamline the post-training of various AI
+    models. With support for multiple model architectures and training
+    configurations, it offers features such as fine-tuning (LoRA, QLoRA, full
+    fine-tuning), preference tuning, reward modelling, and multi-GPU / multi-node
+    training via DeepSpeed and FSDP.
+  license: Apache-2.0
+  license_family: Apache
+  license_file: LICENSE
+  doc_url: https://docs.axolotl.ai/
+  dev_url: https://github.com/axolotl-ai-cloud/axolotl
+
+extra:
+  recipe-maintainers:
+    - winglian

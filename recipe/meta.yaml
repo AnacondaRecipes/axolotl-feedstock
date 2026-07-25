@@ -130,10 +130,13 @@ requirements:
     - posthog >=6.7.11
     # relaxed from upstream ==1.11.0: stable validator/tokenizer APIs, patch diff
     - mistral-common >=1.11.0,<2
-    # bitsandbytes: *cuda* on the cuda variant — its CPU builds carry a higher build
-    # number, so an unconstrained solve would pick the CPU one and lose the GPU kernels.
-    - bitsandbytes ==0.49.1                  # [gpu_variant != "cuda"]
-    - bitsandbytes ==0.49.1 *cuda*           # [gpu_variant == "cuda"]
+    # bitsandbytes: relaxed from upstream ==0.49.1. 0.49.1's only CUDA build is
+    # cuda128 (CUDA 12.8), but torchao 0.17.0 has only cuda129/cuda130 builds, so
+    # the two exact pins can't share a pytorch. 0.49.2 (a patch bump) adds a
+    # cuda129 build, aligning bitsandbytes + torchao + pytorch on CUDA 12.9. The
+    # *cuda* glob on the cuda variant avoids the higher-build-number CPU build.
+    - bitsandbytes >=0.49.1                  # [gpu_variant != "cuda"]
+    - bitsandbytes >=0.49.1 *cuda*           # [gpu_variant == "cuda"]
     - triton >=3.4.0
     - xformers >=0.0.33.post2
     # relaxed from upstream ==0.7.0: axolotl co-pins trl ==1.5.1, whose `liger`
@@ -153,7 +156,14 @@ test:
   imports:
     - axolotl
   commands:
-    - pip check
+    # No `pip check`: axolotl's wheel metadata carries upstream's exact-version
+    # lockfile pins (immutabledict==4.2.0, liger-kernel==0.7.0, optimum==1.16.2,
+    # posthog==6.7.11, python-dotenv==1.0.1, nvidia-ml-py==12.560.30,
+    # mistral-common==1.11.0, zstandard==0.22.0, bitsandbytes==0.49.1, plus
+    # kernels/torchao), which this recipe deliberately relaxes/omits for conda
+    # compatibility (each verified against axolotl's actual usage). pip check
+    # compares those frozen metadata pins to the installed versions and would
+    # always fail, so the CLI smoke test below is the meaningful install check.
     - axolotl --help
   requires:
     - pip

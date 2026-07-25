@@ -53,6 +53,11 @@ requirements:
   run:
     - python
     - __cuda                                # [gpu_variant == "cuda"]
+    # Lock the GPU stack to CUDA 12.9: bitsandbytes 0.49.1's only CUDA build is
+    # cuda128 (>=12.8,<13); torchao/pytorch have cuda129 builds. Without this the
+    # loose *cuda* globs let the solver pick a cuda130 pytorch, clashing with
+    # bitsandbytes' cuda-version <13.
+    - cuda-version >=12.9,<13               # [gpu_variant == "cuda"]
     # pytorch: the *cuda* glob on the cuda variant forces the CUDA build. This both
     # provides __cuda-backed torchao/bitsandbytes and avoids the cpu_mkl pytorch (Intel
     # OpenMP), which is mutually exclusive with numba's GNU OpenMP (_openmp_mutex).

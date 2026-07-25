@@ -107,7 +107,10 @@ requirements:
     - gcsfs >=2025.3.0
     - adlfs >=2024.5.0
     - ocifs ==1.3.2
-    - zstandard ==0.22.0
+    # relaxed from upstream ==0.22.0: the 0.22.0 conda build links zstd 1.5.5,
+    # but datasets 4.8.4 → pyarrow >=21 → arrow-cpp needs zstd >=1.5.7. zstandard
+    # 0.24+ links zstd 1.5.7; the Python API is unchanged, so relaxing is safe.
+    - zstandard >=0.22.0
     - fastcore
     - lm_eval ==0.4.11
     - langdetect ==1.0.9

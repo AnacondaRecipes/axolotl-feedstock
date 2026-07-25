@@ -1,0 +1,18 @@
+# axolotl is pure Python (nothing compiles CUDA), but it targets NVIDIA GPUs. The cuda
+# variant exists only so its build/test gets routed to a GPU worker pool where the
+# `__cuda` virtual package is present; no nvcc output or CUDA lib ends up in the package.
+# cuda_compiler_version is therefore arbitrary/unversioned (12.x vs 13.0 would be
+# byte-identical) with a single `cuda` entry. The `none`/CPU variant is kept so axolotl
+# stays installable on a GPU-less machine. linux-64 only (see build/skip in meta.yaml).
+gpu_variant:
+  - none
+  - cuda                        # [linux and x86_64]
+
+cuda_compiler_version:          # [linux and x86_64]
+  - none                        # [linux and x86_64]
+  - 13.0                        # [linux and x86_64]
+
+zip_keys:                       # [linux and x86_64]
+  -                             # [linux and x86_64]
+    - gpu_variant               # [linux and x86_64]
+    - cuda_compiler_version     # [linux and x86_64]

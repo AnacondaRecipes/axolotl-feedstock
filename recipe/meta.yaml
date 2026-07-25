@@ -1,5 +1,8 @@
 {% set name = "axolotl" %}
 {% set version = "0.17.0" %}
+{% set build_number = 0 %}
+{% set cuda_enabled = (gpu_variant or "none") == "cuda" %}
+{% set build = build_number + 100 if cuda_enabled else build_number %}
 
 package:
   name: {{ name|lower }}
@@ -10,17 +13,37 @@ source:
   sha256: 3bb4ce6d8158a2b598560808d8fe5148081f79eeba7e1bd649fe3211f0c87733
 
 build:
-  number: 0
-  # axolotl's hard deps triton / fla-core / liger-kernel / flash-linear-attention
-  # are only available on linux-64 on pkgs/main, so build there only.
-  # py3.10 is skipped: axolotl requires numpy >=2.2.6, but numpy 2.3 dropped
-  # py3.10 support so pkgs/main has no numpy >=2.2.6 for py3.10 (max is 2.2.5).
+  # CUDA variants offset +100 so conda prefers them where __cuda is present; the CPU
+  # build stays installable on GPU-less machines.
+  number: {{ build }}
+  # linux-64 only: hard deps triton / fla-core / liger-kernel / flash-linear-attention
+  # are linux-64-only on pkgs/main. py3.10 is skipped: axolotl needs numpy >=2.2.6, but
+  # numpy 2.3 dropped py3.10 so pkgs/main has no numpy >=2.2.6 for py3.10 (max 2.2.5).
   skip: true  # [not linux64 or py<311]
+  # The cpu_/cuda_ prefix MUST stay or the two variants dedupe into one package. Keep
+  # py{{ CONDA_PY }} too (python-specific: cpXY .pyc). No CUDA version -- nothing links a
+  # toolkit; the cuda variant exists only to route build/test to a GPU worker pool.
+  string: cpu_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ build }}    # [gpu_variant != "cuda"]
+  string: cuda_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ build }}   # [gpu_variant == "cuda"]
+  # Nothing is compiled, so drop the C/C++ run_exports; else they'd land on the cuda
+  # variant only, diverging its run deps from the CPU variant's.
+  ignore_run_exports_from:                  # [gpu_variant == "cuda"]
+    - {{ compiler('c') }}                   # [gpu_variant == "cuda"]
+    - {{ compiler('cxx') }}                 # [gpu_variant == "cuda"]
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
   entry_points:
     - axolotl = axolotl.cli.main:main
 
 requirements:
+  build:
+    # Nothing is compiled -- axolotl is pure Python. cuda-nvcc is here only to route the
+    # PBP build/test tasks to the GPU worker pool, which is what makes __cuda resolvable
+    # and lets the full-stack env install (cuda pytorch/torchao/bitsandbytes) on the cuda
+    # variant. compiler('c')/('cxx') are required because cuda-nvcc's activation script
+    # hard-fails without them.
+    - {{ compiler('c') }}                   # [gpu_variant == "cuda"]
+    - {{ compiler('cxx') }}                 # [gpu_variant == "cuda"]
+    - {{ compiler('cuda') }}                # [gpu_variant == "cuda"]
   host:
     - python
     - pip
@@ -29,7 +52,12 @@ requirements:
     - wheel
   run:
     - python
-    - pytorch >=2.9.1
+    - __cuda                                # [gpu_variant == "cuda"]
+    # pytorch: the *cuda* glob on the cuda variant forces the CUDA build. This both
+    # provides __cuda-backed torchao/bitsandbytes and avoids the cpu_mkl pytorch (Intel
+    # OpenMP), which is mutually exclusive with numba's GNU OpenMP (_openmp_mutex).
+    - pytorch >=2.9.1                        # [gpu_variant != "cuda"]
+    - pytorch >=2.9.1 *cuda*                 # [gpu_variant == "cuda"]
     - packaging ==26.0
     - huggingface_hub >=1.1.7
     - peft >=0.19.1,<0.20.0
@@ -94,7 +122,10 @@ requirements:
     - posthog >=6.7.11
     # relaxed from upstream ==1.11.0: stable validator/tokenizer APIs, patch diff
     - mistral-common >=1.11.0,<2
-    - bitsandbytes ==0.49.1
+    # bitsandbytes: *cuda* on the cuda variant — its CPU builds carry a higher build
+    # number, so an unconstrained solve would pick the CPU one and lose the GPU kernels.
+    - bitsandbytes ==0.49.1                  # [gpu_variant != "cuda"]
+    - bitsandbytes ==0.49.1 *cuda*           # [gpu_variant == "cuda"]
     - triton >=3.4.0
     - xformers >=0.0.33.post2
     # relaxed from upstream ==0.7.0: axolotl co-pins trl ==1.5.1, whose `liger`
@@ -102,7 +133,11 @@ requirements:
     # opt-in) but conda's run_constrained enforces it, so 0.7.0 is unusable
     # alongside trl 1.5.1. pkgs/main ships liger-kernel 0.8.0.
     - liger-kernel >=0.8.0
-    - torchao ==0.17.0
+    # torchao is cuda-variant only: its CPU build hard-requires pytorch cpu_mkl (Intel
+    # OpenMP), which is mutually exclusive with numba's GNU OpenMP, making the CPU
+    # variant unsolvable. torchao is a GPU quantization library, so the CPU build (which
+    # can't train anyway) simply omits it.
+    - torchao ==0.17.0                       # [gpu_variant == "cuda"]
     - fla-core ==0.4.1
     - flash-linear-attention ==0.4.1
 

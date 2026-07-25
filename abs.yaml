@@ -1,13 +1,17 @@
 # TEMPORARY — remove before merge.
-# axolotl 0.17.0 exact-pins three deps that are green in review but not yet on
+# axolotl 0.17.0 depends on several deps that are green in review but not yet on
 # pkgs/main. Resolve them from each PR's staging channel (7-char short-SHA path)
-# so CI can build/test the full solve now. Delete this file once all three land
-# on pkgs/main:
+# so CI can build/test the full solve now. Delete this file once all land on
+# pkgs/main:
 #   fla-core 0.4.1                 fla-core-feedstock#2
 #   flash-linear-attention 0.4.1   flash-linear-attention-feedstock#2
 #   evaluate 0.4.1                 evaluate-feedstock#8
+#   wandb 0.27.2 (py3.14)          wandb-feedstock#7      -- py3.14 only
+#   lm_eval 0.4.11 (py3.14)        lm_eval-feedstock#2    -- py3.14 only
 # (liger-kernel comes from pkgs/main at >=0.8.0; kernels is dropped — see recipe.)
 channels:
   - https://staging.continuum.io/pbp/fs/fla-core-feedstock/pr2/0d1ecd4
   - https://staging.continuum.io/pbp/fs/flash-linear-attention-feedstock/pr2/709212c
   - https://staging.continuum.io/pbp/fs/evaluate-feedstock/pr8/9c8fdd8
+  - https://staging.continuum.io/pbp/fs/wandb-feedstock/pr7/85b9164
+  - https://staging.continuum.io/pbp/fs/lm_eval-feedstock/pr2/3cee612

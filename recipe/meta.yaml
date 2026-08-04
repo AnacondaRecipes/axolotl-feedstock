@@ -3,7 +3,6 @@
 {% set build_number = 0 %}
 {% set cuda_enabled = (gpu_variant or "none") == "cuda" %}
 {% set build = build_number + 100 if cuda_enabled else build_number %}
-{% set variant = "cuda" if cuda_enabled else "cpu" %}
 
 package:
   name: {{ name }}
@@ -14,15 +13,18 @@ source:
   sha256: 3bb4ce6d8158a2b598560808d8fe5148081f79eeba7e1bd649fe3211f0c87733
 
 build:
-  # +100 on cuda so conda prefers it where __cuda is present.
-  number: {{ build }}
+  # +100 on cuda so conda prefers it where __cuda is present. Literal per-variant
+  # lines (not Jinja) so the linter can read an int here; keep in sync with
+  # build_number above (the string: lines derive from it via the build var).
+  number: 0    # [gpu_variant != "cuda"]
+  number: 100  # [gpu_variant == "cuda"]
   # linux-64 only (triton/fla-core/liger/flash are linux-64-only on pkgs/main).
   # Upstream floor is py3.10 (requires-python >=3.10); py3.10 additionally
   # skipped here because numpy >=2.2.6 has no py3.10 build on pkgs/main.
   skip: true  # [not linux64 or py<311]
   # cpu_/cuda_ prefix keeps the two variants from deduping into one package.
-  # (Jinja, not selectors: duplicate `string:` keys crash anaconda-linter.)
-  string: {{ variant }}_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ build }}
+  string: cpu_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ build }}    # [gpu_variant != "cuda"]
+  string: cuda_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ build }}   # [gpu_variant == "cuda"]
   # Nothing is compiled; drop the C/C++ run_exports so they don't skew the cuda variant.
   ignore_run_exports_from:                  # [gpu_variant == "cuda"]
     - {{ compiler('c') }}                   # [gpu_variant == "cuda"]

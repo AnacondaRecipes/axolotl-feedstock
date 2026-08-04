@@ -5,7 +5,7 @@
 {% set build = build_number + 100 if cuda_enabled else build_number %}
 
 package:
-  name: {{ name|lower }}
+  name: {{ name }}
   version: {{ version }}
 
 source:
@@ -16,7 +16,8 @@ build:
   # +100 on cuda so conda prefers it where __cuda is present.
   number: {{ build }}
   # linux-64 only (triton/fla-core/liger/flash are linux-64-only on pkgs/main).
-  # py<311 skipped: numpy >=2.2.6 has no py3.10 build on pkgs/main.
+  # Upstream floor is py3.10 (requires-python >=3.10); py3.10 additionally
+  # skipped here because numpy >=2.2.6 has no py3.10 build on pkgs/main.
   skip: true  # [not linux64 or py<311]
   # cpu_/cuda_ prefix keeps the two variants from deduping into one package.
   string: cpu_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ build }}    # [gpu_variant != "cuda"]
@@ -129,6 +130,13 @@ test:
     # recipe deliberately relaxes/omits for conda), so it would always fail. The
     # CLI smoke test exercises the real import chain instead.
     - axolotl --help
+    - axolotl preprocess --help
+    # Heavy deps axolotl only imports lazily (quantization, monkeypatches,
+    # remote-fs, integrations) — prove they load in this exact env, where
+    # combined-env import clashes (e.g. OpenMP) would surface.
+    - python -c "import s3fs, gcsfs, adlfs, ocifs, wandb, evaluate, gradio, mistral_common"
+    - python -c "import bitsandbytes, xformers, liger_kernel, fla"           # [gpu_variant != "cuda"]
+    - python -c "import bitsandbytes, torchao, xformers, liger_kernel, fla"  # [gpu_variant == "cuda"]
   requires:
     - pip
 

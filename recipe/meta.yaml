@@ -3,6 +3,7 @@
 {% set build_number = 0 %}
 {% set cuda_enabled = (gpu_variant or "none") == "cuda" %}
 {% set build = build_number + 100 if cuda_enabled else build_number %}
+{% set variant = "cuda" if cuda_enabled else "cpu" %}
 
 package:
   name: {{ name }}
@@ -20,8 +21,8 @@ build:
   # skipped here because numpy >=2.2.6 has no py3.10 build on pkgs/main.
   skip: true  # [not linux64 or py<311]
   # cpu_/cuda_ prefix keeps the two variants from deduping into one package.
-  string: cpu_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ build }}    # [gpu_variant != "cuda"]
-  string: cuda_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ build }}   # [gpu_variant == "cuda"]
+  # (Jinja, not selectors: duplicate `string:` keys crash anaconda-linter.)
+  string: {{ variant }}_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ build }}
   # Nothing is compiled; drop the C/C++ run_exports so they don't skew the cuda variant.
   ignore_run_exports_from:                  # [gpu_variant == "cuda"]
     - {{ compiler('c') }}                   # [gpu_variant == "cuda"]
@@ -156,5 +157,17 @@ about:
   dev_url: https://github.com/axolotl-ai-cloud/axolotl
 
 extra:
+  skip-lints:
+    # number: {{ build }} is CBC-driven Jinja (+100 cuda offset); the linter
+    # renders without CBC context and can't see it
+    - missing_build_number
+    # compilers exist only to route the cuda variant to a GPU worker pool;
+    # nothing is compiled, so stdlib('c') would be a fake dep
+    - should_use_stdlib
+    # wheel metadata freezes upstream's exact pins that this recipe
+    # deliberately relaxes; see the comment in test.commands
+    - missing_pip_check
+    # pytorch/numpy are CBC-pinned pure-Python run deps, not linked at build
+    - cbc_dep_in_run_missing_from_host
   recipe-maintainers:
     - winglian

@@ -68,9 +68,11 @@ requirements:
     # axolotl's ==0.13.0); axolotl never imports the HF kernels package.
     - trackio >=0.16.1
     - typing_extensions >=4.15.0
-    # relaxed ==1.16.2: only optimum.bettertransformer (lazy, removed in 2.0) is
-    # used; capped <2 so the BetterTransformer path stays importable.
-    - optimum >=1.16.2,<2
+    # relaxed ==1.16.2: axolotl's only use is optimum.bettertransformer (lazy,
+    # behind the flash_optimum flag), which targets transformers 4.x internals —
+    # inoperative with the transformers ==5.9.0 pin on ANY optimum version, so a
+    # <2 cap adds nothing and 1.x has no py3.14 build on pkgs/main.
+    - optimum >=1.16.2
     - hf-transfer
     - sentencepiece
     - gradio >=6.2.0,<7.0

@@ -156,6 +156,13 @@ requirements:
 {% set ignore_tests = ignore_tests + " --ignore=tests/test_perplexity.py" %}
 {% set ignore_tests = ignore_tests + " --ignore=tests/test_revision_parameter.py" %}
 
+# transformers kernelize() needs the HF `kernels` package, unshippable at
+# 0.17.0 (transformers 5.9 caps kernels <0.13; axolotl pins ==0.13.0)
+{% set deselect_tests = " --deselect=tests/monkeypatch/test_gemma4_kernelize.py::test_full_model_kernelize_succeeds_with_patch" %}
+# torch.compile's CPU inductor backend needs a C++ toolchain absent from the
+# conda test env (on the cuda variant it compiles via triton instead)
+{% set deselect_tests = deselect_tests + " --deselect=tests/test_chunked_xentropy.py::test_chunked_forward" %}  # [gpu_variant != "cuda"]
+
 test:
   source_files:
     - tests
@@ -182,10 +189,13 @@ test:
     # unit files). NOTE: the root conftest's autouse session fixtures
     # snapshot_download ~10 small HF models (~2-3 GB) before any test runs —
     # upstream's design; needs network. GPU-only tests self-skip without CUDA.
-    - pytest tests -v {{ ignore_tests }}
+    - pytest tests -v {{ ignore_tests }}{{ deselect_tests }}
   requires:
     - pip
     - pytest
+    # triton's runtime JIT compiles a cuda_utils shim against cuda.h, which
+    # cuda-cudart-dev provides at $PREFIX/targets/x86_64-linux/include
+    - cuda-cudart-dev               # [gpu_variant == "cuda"]
 
 about:
   home: https://axolotl.ai/

@@ -137,6 +137,8 @@ requirements:
     - vllm >=0.15.0
 
 test:
+  source_files:
+    - tests
   imports:
     - axolotl
     # axolotl.cli.main (run via --help below) already imports torch / transformers /
@@ -154,8 +156,13 @@ test:
     - python -c "import s3fs, gcsfs, adlfs, ocifs, wandb, evaluate, gradio, mistral_common"
     - python -c "import bitsandbytes, xformers, liger_kernel, fla"           # [gpu_variant != "cuda"]
     - python -c "import bitsandbytes, torchao, xformers, liger_kernel, fla"  # [gpu_variant == "cuda"]
+    # Curated unit subset (no e2e/GPU-training dirs). NOTE: the root conftest's
+    # autouse session fixtures snapshot_download ~10 small HF models (~2-3 GB)
+    # before any test runs — this is upstream's design and needs network.
+    - pytest tests/utils tests/prompt_strategies -v
   requires:
     - pip
+    - pytest
 
 about:
   home: https://axolotl.ai/

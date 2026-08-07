@@ -159,9 +159,9 @@ requirements:
 # transformers kernelize() needs the HF `kernels` package, unshippable at
 # 0.17.0 (transformers 5.9 caps kernels <0.13; axolotl pins ==0.13.0)
 {% set deselect_tests = " --deselect=tests/monkeypatch/test_gemma4_kernelize.py::test_full_model_kernelize_succeeds_with_patch" %}
-# torch.compile's CPU inductor backend needs a C++ toolchain absent from the
-# conda test env (on the cuda variant it compiles via triton instead)
-{% set deselect_tests = deselect_tests + " --deselect=tests/test_chunked_xentropy.py::test_chunked_forward" %}  # [gpu_variant != "cuda"]
+# torch.compile/inductor requires a system C++ toolchain (g++) on both CPU
+# and GPU paths — a pytorch runtime expectation, absent from conda test envs
+{% set deselect_tests = deselect_tests + " --deselect=tests/test_chunked_xentropy.py::test_chunked_forward" %}
 
 test:
   source_files:

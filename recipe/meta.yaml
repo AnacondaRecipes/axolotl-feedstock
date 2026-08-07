@@ -136,6 +136,26 @@ requirements:
     - ray-train >=2.52.1
     - vllm >=0.15.0
 
+# full training runs (GPU/multi-GPU, e2e)
+{% set ignore_tests = " --ignore=tests/e2e" %}
+# spawn training subprocesses; unvetted — candidate for a follow-up
+{% set ignore_tests = ignore_tests + " --ignore=tests/cli" %}
+# import optional integration deps not shipped on defaults (mlflow, ...)
+{% set ignore_tests = ignore_tests + " --ignore=tests/integrations" %}
+# unvetted smaller dirs — candidates for a follow-up
+{% set ignore_tests = ignore_tests + " --ignore=tests/core" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/telemetry" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/patched" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/kernels" %}
+# root files that download extra HF models beyond the conftest fixture set
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_data.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_datasets.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_ebft_strided_structured.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_packed_batch_sampler.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_packed_dataset.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_perplexity.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_revision_parameter.py" %}
+
 test:
   source_files:
     - tests
@@ -158,10 +178,11 @@ test:
     - python -c "import s3fs, gcsfs, adlfs, ocifs, wandb, evaluate, gradio, mistral_common"
     - python -c "import bitsandbytes, xformers, liger_kernel, fla"           # [gpu_variant != "cuda"]
     - python -c "import bitsandbytes, torchao, xformers, liger_kernel, fla"  # [gpu_variant == "cuda"]
-    # Curated unit subset (no e2e/GPU-training dirs). NOTE: the root conftest's
-    # autouse session fixtures snapshot_download ~10 small HF models (~2-3 GB)
-    # before any test runs — this is upstream's design and needs network.
-    - pytest tests/utils tests/prompt_strategies -v
+    # Curated non-e2e unit subset (utils, prompt_strategies, monkeypatch, root
+    # unit files). NOTE: the root conftest's autouse session fixtures
+    # snapshot_download ~10 small HF models (~2-3 GB) before any test runs —
+    # upstream's design; needs network. GPU-only tests self-skip without CUDA.
+    - pytest tests -v {{ ignore_tests }}
   requires:
     - pip
     - pytest

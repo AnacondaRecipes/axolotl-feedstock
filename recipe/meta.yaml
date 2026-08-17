@@ -1,0 +1,229 @@
+{% set name = "axolotl" %}
+{% set version = "0.17.0" %}
+{% set build_number = 0 %}
+{% set cuda_enabled = (gpu_variant or "none") == "cuda" %}
+{% set build = build_number + 100 if cuda_enabled else build_number %}
+
+package:
+  name: {{ name }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  sha256: 3bb4ce6d8158a2b598560808d8fe5148081f79eeba7e1bd649fe3211f0c87733
+
+build:
+  # +100 on cuda so conda prefers it where __cuda is present. Literal per-variant
+  # lines (not Jinja) so the linter can read an int here; keep in sync with
+  # build_number above (the string: lines derive from it via the build var).
+  number: 0    # [gpu_variant != "cuda"]
+  number: 100  # [gpu_variant == "cuda"]
+  # linux-64 only (triton/fla-core/liger/flash are linux-64-only on pkgs/main).
+  # Upstream floor is py3.10 (requires-python >=3.10); py3.10 additionally
+  # skipped here because numpy >=2.2.6 has no py3.10 build on pkgs/main.
+  skip: true  # [not linux64 or py<311]
+  # cpu_/cuda_ prefix keeps the two variants from deduping into one package.
+  string: cpu_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ build }}    # [gpu_variant != "cuda"]
+  string: cuda_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ build }}   # [gpu_variant == "cuda"]
+  # Nothing is compiled; drop the C/C++ run_exports so they don't skew the cuda variant.
+  ignore_run_exports_from:                  # [gpu_variant == "cuda"]
+    - {{ compiler('c') }}                   # [gpu_variant == "cuda"]
+    - {{ compiler('cxx') }}                 # [gpu_variant == "cuda"]
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  entry_points:
+    - axolotl = axolotl.cli.main:main
+
+requirements:
+  build:
+    # Pure Python: cuda-nvcc is here only to route build/test to the GPU worker pool
+    # (makes __cuda resolvable). c/cxx are required by cuda-nvcc's activation script.
+    - {{ compiler('c') }}                   # [gpu_variant == "cuda"]
+    - {{ compiler('cxx') }}                 # [gpu_variant == "cuda"]
+    - {{ compiler('cuda') }}                # [gpu_variant == "cuda"]
+  host:
+    - python
+    - pip
+    - setuptools >=64
+    - setuptools_scm >=8
+    - wheel
+  run:
+    - python
+    - __cuda                                # [gpu_variant == "cuda"]
+    # Lock the GPU stack to CUDA 12.9 (bitsandbytes has cuda128/129; torchao has
+    # cuda129/130 — 12.9 is the overlap).
+    - cuda-version >=12.9,<13               # [gpu_variant == "cuda"]
+    # *cuda* forces the CUDA pytorch build (also avoids the cpu_mkl / numba OpenMP clash).
+    - pytorch >=2.9.1                        # [gpu_variant != "cuda"]
+    - pytorch >=2.9.1 *cuda*                 # [gpu_variant == "cuda"]
+    - packaging ==26.0
+    - huggingface_hub >=1.1.7
+    - peft >=0.19.1,<0.20.0
+    - tokenizers >=0.22.1
+    - transformers ==5.9.0
+    - accelerate ==1.13.0
+    - datasets >=4.8.4,<4.9.0
+    - trl ==1.5.1
+    - hf-xet ==1.4.3
+    # kernels dropped: transformers 5.9.0 requires kernels <0.13 (disjoint from
+    # axolotl's ==0.13.0); axolotl never imports the HF kernels package.
+    - trackio >=0.16.1
+    - typing_extensions >=4.15.0
+    # relaxed ==1.16.2: axolotl's only use is optimum.bettertransformer (lazy,
+    # behind the flash_optimum flag), which targets transformers 4.x internals —
+    # inoperative with the transformers ==5.9.0 pin on ANY optimum version, so a
+    # <2 cap adds nothing and 1.x has no py3.14 build on pkgs/main.
+    - optimum >=1.16.2
+    - hf-transfer
+    - sentencepiece
+    - gradio >=6.2.0,<7.0
+    - modal-client ==1.3.0.post1
+    - pydantic >=2.10.6
+    - addict
+    - fire
+    - pyyaml >=6.0
+    - requests
+    - wandb
+    - einops
+    - colorama
+    - numba >=0.61.2
+    - numpy >=2.2.6
+    - typer <0.26.0
+    - evaluate ==0.4.1
+    - scipy
+    - nvidia-ml-py >=12.560.30      # relaxed ==12.560.30: stable pynvml bindings only
+    - art
+    - tensorboard
+    - python-dotenv >=1.0.1         # relaxed ==1.0.1: only load_dotenv is used
+    - s3fs >=2024.5.0
+    - gcsfs >=2025.3.0
+    - adlfs >=2024.5.0
+    - ocifs ==1.3.2
+    # relaxed ==0.22.0: 0.22.0 links zstd 1.5.5; arrow-cpp (via datasets) needs >=1.5.7.
+    - zstandard >=0.22.0
+    - fastcore
+    - lm_eval ==0.4.11
+    - langdetect ==1.0.9
+    - immutabledict >=4.2.0         # relaxed ==4.2.0: transitive-only, not imported
+    - antlr4-python3-runtime ==4.13.2
+    - schedulefree ==1.4.1
+    - openenv-core ==0.1.0
+    - axolotl-contribs-lgpl ==0.0.7
+    - axolotl-contribs-mit ==0.0.6
+    - posthog >=6.7.11              # relaxed ==6.7.11: module-level API preserved in 7.x
+    - mistral-common >=1.11.0,<2    # relaxed ==1.11.0: patch diff, stable APIs
+    # relaxed ==0.49.1: 0.49.1 has only a cuda128 build, but torchao 0.17.0 has
+    # only cuda129/130 — 0.49.2 adds cuda129, aligning both on CUDA 12.9.
+    - bitsandbytes >=0.49.1                  # [gpu_variant != "cuda"]
+    - bitsandbytes >=0.49.1 *cuda*           # [gpu_variant == "cuda"]
+    - triton >=3.4.0
+    - xformers >=0.0.33.post2
+    # relaxed ==0.7.0: trl 1.5.1's liger extra requires >=0.8.0 (run_constrained).
+    - liger-kernel >=0.8.0
+    # cuda-only: torchao's CPU build needs cpu_mkl pytorch (Intel OpenMP), which
+    # clashes with numba; it's a GPU quantization lib, useless on the CPU build.
+    - torchao ==0.17.0                       # [gpu_variant == "cuda"]
+    - fla-core ==0.4.1
+    - flash-linear-attention ==0.4.1
+  run_constrained:
+    # Bounded optional extras (integration features); bounds from upstream
+    # pyproject. Unbounded extras (mlflow, opentelemetry, prometheus-client)
+    # are omitted — a bare run_constrained entry is a no-op — as are the
+    # bounded optimizer/quantizer extras not packaged for conda (auto-gptq,
+    # mamba-ssm, came-pytorch, lomo-optim, q-galore-torch, torch-optimi,
+    # ring-flash-attn, llmcompressor, fbgemm-gpu-genai).
+    - flash-attn ==2.8.3
+    - deepspeed >=0.18.6,<0.19.0
+    - ray-train >=2.52.1
+    - vllm >=0.15.0
+
+# full training runs (GPU/multi-GPU, e2e)
+{% set ignore_tests = " --ignore=tests/e2e" %}
+# spawn training subprocesses; unvetted — candidate for a follow-up
+{% set ignore_tests = ignore_tests + " --ignore=tests/cli" %}
+# import optional integration deps not shipped on defaults (mlflow, ...)
+{% set ignore_tests = ignore_tests + " --ignore=tests/integrations" %}
+# unvetted smaller dirs — candidates for a follow-up
+{% set ignore_tests = ignore_tests + " --ignore=tests/core" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/telemetry" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/patched" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/kernels" %}
+# root files that download extra HF models beyond the conftest fixture set
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_data.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_datasets.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_ebft_strided_structured.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_packed_batch_sampler.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_packed_dataset.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_perplexity.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_revision_parameter.py" %}
+
+# transformers kernelize() needs the HF `kernels` package, unshippable at
+# 0.17.0 (transformers 5.9 caps kernels <0.13; axolotl pins ==0.13.0)
+{% set deselect_tests = " --deselect=tests/monkeypatch/test_gemma4_kernelize.py::test_full_model_kernelize_succeeds_with_patch" %}
+# torch.compile/inductor requires a system C++ toolchain (g++) on both CPU
+# and GPU paths — a pytorch runtime expectation, absent from conda test envs
+{% set deselect_tests = deselect_tests + " --deselect=tests/test_chunked_xentropy.py::test_chunked_forward" %}
+
+test:
+  source_files:
+    - tests
+    # tests/utils/test_cuda13.py sources scripts/cuda13_env.sh by relative path
+    - scripts
+  imports:
+    - axolotl
+    # axolotl.cli.main (run via --help below) already imports torch / transformers /
+    # lm_eval / pydantic; loaders adds the peft / accelerate / tokenizer stack.
+    - axolotl.loaders
+  commands:
+    # No `pip check`: the wheel metadata freezes upstream's exact pins (which this
+    # recipe deliberately relaxes/omits for conda), so it would always fail. The
+    # CLI smoke test exercises the real import chain instead.
+    - axolotl --help
+    - axolotl preprocess --help
+    # Heavy deps axolotl only imports lazily (quantization, monkeypatches,
+    # remote-fs, integrations) — prove they load in this exact env, where
+    # combined-env import clashes (e.g. OpenMP) would surface.
+    - python -c "import s3fs, gcsfs, adlfs, ocifs, wandb, evaluate, gradio, mistral_common"
+    - python -c "import bitsandbytes, xformers, liger_kernel, fla"           # [gpu_variant != "cuda"]
+    - python -c "import bitsandbytes, torchao, xformers, liger_kernel, fla"  # [gpu_variant == "cuda"]
+    # Curated non-e2e unit subset (utils, prompt_strategies, monkeypatch, root
+    # unit files). NOTE: the root conftest's autouse session fixtures
+    # snapshot_download ~10 small HF models (~2-3 GB) before any test runs —
+    # upstream's design; needs network. GPU-only tests self-skip without CUDA.
+    - pytest tests -v {{ ignore_tests }}{{ deselect_tests }}
+  requires:
+    - pip
+    - pytest
+    # triton's runtime JIT compiles a cuda_utils shim against cuda.h, which
+    # cuda-cudart-dev provides at $PREFIX/targets/x86_64-linux/include
+    - cuda-cudart-dev               # [gpu_variant == "cuda"]
+
+about:
+  home: https://axolotl.ai/
+  summary: Axolotl is a tool designed to streamline post-training for various AI models
+  description: |
+    Axolotl is a tool designed to streamline the post-training of various AI
+    models. With support for multiple model architectures and training
+    configurations, it offers features such as fine-tuning (LoRA, QLoRA, full
+    fine-tuning), preference tuning, reward modelling, and multi-GPU / multi-node
+    training via DeepSpeed and FSDP.
+  license: Apache-2.0
+  license_family: Apache
+  license_file: LICENSE
+  doc_url: https://docs.axolotl.ai/
+  dev_url: https://github.com/axolotl-ai-cloud/axolotl
+
+extra:
+  skip-lints:
+    # number: {{ build }} is CBC-driven Jinja (+100 cuda offset); the linter
+    # renders without CBC context and can't see it
+    - missing_build_number
+    # compilers exist only to route the cuda variant to a GPU worker pool;
+    # nothing is compiled, so stdlib('c') would be a fake dep
+    - should_use_stdlib
+    # wheel metadata freezes upstream's exact pins that this recipe
+    # deliberately relaxes; see the comment in test.commands
+    - missing_pip_check
+    # pytorch/numpy are CBC-pinned pure-Python run deps, not linked at build
+    - cbc_dep_in_run_missing_from_host
+  recipe-maintainers:
+    - winglian

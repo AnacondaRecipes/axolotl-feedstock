@@ -1,0 +1,17 @@
+# axolotl is pure Python but targets NVIDIA GPUs. The cuda variant exists only to
+# route build/test to a GPU worker pool (where __cuda is present); nothing links a
+# toolkit. The none/CPU variant keeps axolotl installable without a GPU. linux-64 only.
+gpu_variant:
+  - none
+  - cuda                        # [linux and x86_64]
+
+# 12.9, not 13.0: it's the CUDA line shared by bitsandbytes (cuda128/129) and
+# torchao 0.17.0 (cuda129/130). cuda-nvcc's run_export then holds the stack on CUDA 12.
+cuda_compiler_version:          # [linux and x86_64]
+  - none                        # [linux and x86_64]
+  - 12.9                        # [linux and x86_64]
+
+zip_keys:                       # [linux and x86_64]
+  -                             # [linux and x86_64]
+    - gpu_variant               # [linux and x86_64]
+    - cuda_compiler_version     # [linux and x86_64]

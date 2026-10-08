@@ -1,6 +1,6 @@
 {% set name = "axolotl" %}
 {% set version = "0.17.0" %}
-{% set build_number = 0 %}
+{% set build_number = 1 %}
 {% set cuda_enabled = (gpu_variant or "none") == "cuda" %}
 {% set build = build_number + 100 if cuda_enabled else build_number %}
 
@@ -16,8 +16,8 @@ build:
   # +100 on cuda so conda prefers it where __cuda is present. Literal per-variant
   # lines (not Jinja) so the linter can read an int here; keep in sync with
   # build_number above (the string: lines derive from it via the build var).
-  number: 0    # [gpu_variant != "cuda"]
-  number: 100  # [gpu_variant == "cuda"]
+  number: 1    # [gpu_variant != "cuda"]
+  number: 101  # [gpu_variant == "cuda"]
   # linux-64 only (triton/fla-core/liger/flash are linux-64-only on pkgs/main).
   # Upstream floor is py3.10 (requires-python >=3.10); py3.10 additionally
   # skipped here because numpy >=2.2.6 has no py3.10 build on pkgs/main.

@@ -10,7 +10,7 @@ package:
 
 source:
   url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  sha256: 3bb4ce6d8158a2b598560808d8fe5148081f79eeba7e1bd649fe3211f0c87733
+  sha256: afea33eb36aa578699b128713692ea409642ffad6243c7cbbf02c1a986471515
 
 build:
   # +100 on cuda so conda prefers it where __cuda is present. Literal per-variant

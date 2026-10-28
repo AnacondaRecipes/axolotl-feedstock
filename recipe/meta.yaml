@@ -1,5 +1,5 @@
 {% set name = "axolotl" %}
-{% set version = "0.17.0" %}
+{% set version = "0.21.1" %}
 {% set build_number = 0 %}
 {% set cuda_enabled = (gpu_variant or "none") == "cuda" %}
 {% set build = build_number + 100 if cuda_enabled else build_number %}

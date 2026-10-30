@@ -19,8 +19,6 @@ build:
   number: 0    # [gpu_variant != "cuda"]
   number: 100  # [gpu_variant == "cuda"]
   # linux-64 only (triton/fla-core/liger/flash are linux-64-only on pkgs/main).
-  # Upstream floor is py3.10 (requires-python >=3.10); py3.10 additionally
-  # skipped here because numpy >=2.2.6 has no py3.10 build on pkgs/main.
   skip: true  # [not linux64 or py<312]
   # cpu_/cuda_ prefix keeps the two variants from deduping into one package.
   string: cpu_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ build }}    # [gpu_variant != "cuda"]

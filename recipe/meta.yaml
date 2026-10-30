@@ -51,21 +51,22 @@ requirements:
     # cuda129/130 — 12.9 is the overlap).
     - cuda-version >=12.9,<13               # [gpu_variant == "cuda"]
     # *cuda* forces the CUDA pytorch build (also avoids the cpu_mkl / numba OpenMP clash).
-    - pytorch >=2.9.1                        # [gpu_variant != "cuda"]
-    - pytorch >=2.9.1 *cuda*                 # [gpu_variant == "cuda"]
+    - pytorch >=2.13.0,<2.15.0                        # [gpu_variant != "cuda"]
+    - pytorch >=2.13.0,<2.15.0 *cuda*                 # [gpu_variant == "cuda"]
     - packaging ==26.0
-    - huggingface_hub >=1.1.7
-    - peft >=0.19.1,<0.20.0
-    - tokenizers >=0.22.1
-    - transformers ==5.9.0
-    - accelerate ==1.13.0
-    - datasets >=4.8.4,<4.9.0
-    - trl ==1.5.1
-    - hf-xet ==1.4.3
+    - huggingface_hub >=1.31.0
+    - peft ==0.21.2
+    - tokenizers ==0.23.3
+    - transformers ==5.20.1
+    - accelerate ==1.15.0
+    - datasets ==5.0.1
+    - trl ==1.14.1
+    - hf-xet >=1.5.2
     # kernels dropped: transformers 5.9.0 requires kernels <0.13 (disjoint from
     # axolotl's ==0.13.0); axolotl never imports the HF kernels package.
-    - trackio >=0.16.1
-    - typing_extensions >=4.15.0
+    # kernels >=0.17.2,<0.18.0
+    - trackio ==0.40.0
+    - typing_extensions ==4.15.0
     # relaxed ==1.16.2: axolotl's only use is optimum.bettertransformer (lazy,
     # behind the flash_optimum flag), which targets transformers 4.x internals —
     # inoperative with the transformers ==5.9.0 pin on ANY optimum version, so a
@@ -73,28 +74,28 @@ requirements:
     - optimum >=1.16.2
     - hf-transfer
     - sentencepiece
-    - gradio >=6.2.0,<7.0
-    - modal-client ==1.3.0.post1
-    - pydantic >=2.10.6
+    - gradio ==6.29.1
+    - pydantic ==2.13.5
     - addict
     - fire
-    - pyyaml >=6.0
+    - pyyaml ==6.0.3
     - requests
+    - certifi >=2026.10.19
     - wandb
     - einops
     - colorama
-    - numba >=0.61.2
-    - numpy >=2.2.6
-    - typer <0.26.0
+    - numba >=0.63.1,<1.0
+    - numpy >=2.1,<3.0
+    - typer ==0.25.1
     - evaluate ==0.4.1
     - scipy
     - nvidia-ml-py >=12.560.30      # relaxed ==12.560.30: stable pynvml bindings only
     - art
     - tensorboard
     - python-dotenv >=1.0.1         # relaxed ==1.0.1: only load_dotenv is used
-    - s3fs >=2024.5.0
-    - gcsfs >=2025.3.0
-    - adlfs >=2024.5.0
+    - s3fs ==2025.10.0
+    - gcsfs ==2025.10.0
+    - adlfs ==2026.2.0
     - ocifs ==1.3.2
     # relaxed ==0.22.0: 0.22.0 links zstd 1.5.5; arrow-cpp (via datasets) needs >=1.5.7.
     - zstandard >=0.22.0
@@ -104,24 +105,24 @@ requirements:
     - immutabledict >=4.2.0         # relaxed ==4.2.0: transitive-only, not imported
     - antlr4-python3-runtime ==4.13.2
     - schedulefree ==1.4.1
-    - openenv-core ==0.1.0
+    - openenv-core >=0.1.0
     - axolotl-contribs-lgpl ==0.0.7
     - axolotl-contribs-mit ==0.0.6
     - posthog >=6.7.11              # relaxed ==6.7.11: module-level API preserved in 7.x
-    - mistral-common >=1.11.0,<2    # relaxed ==1.11.0: patch diff, stable APIs
+    - mistral-common ==1.12.0    # relaxed ==1.11.0: patch diff, stable APIs
     # relaxed ==0.49.1: 0.49.1 has only a cuda128 build, but torchao 0.17.0 has
     # only cuda129/130 — 0.49.2 adds cuda129, aligning both on CUDA 12.9.
-    - bitsandbytes >=0.49.1                  # [gpu_variant != "cuda"]
-    - bitsandbytes >=0.49.1 *cuda*           # [gpu_variant == "cuda"]
+    - bitsandbytes ==0.50.2                  # [gpu_variant != "cuda"]
+    - bitsandbytes ==0.50.2 *cuda*           # [gpu_variant == "cuda"]
     - triton >=3.4.0
     - xformers >=0.0.33.post2
     # relaxed ==0.7.0: trl 1.5.1's liger extra requires >=0.8.0 (run_constrained).
-    - liger-kernel >=0.8.0
+    - liger-kernel ==0.8.5
     # cuda-only: torchao's CPU build needs cpu_mkl pytorch (Intel OpenMP), which
     # clashes with numba; it's a GPU quantization lib, useless on the CPU build.
-    - torchao ==0.17.0                       # [gpu_variant == "cuda"]
-    - fla-core ==0.4.1
-    - flash-linear-attention ==0.4.1
+    - torchao ==0.18.0                       # [gpu_variant == "cuda"]
+    - fla-core ==0.5.2
+    - flash-linear-attention ==0.5.2
   run_constrained:
     # Bounded optional extras (integration features); bounds from upstream
     # pyproject. Unbounded extras (mlflow, opentelemetry, prometheus-client)

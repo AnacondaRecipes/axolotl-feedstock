@@ -109,14 +109,11 @@ requirements:
     - axolotl-contribs-lgpl ==0.0.7
     - axolotl-contribs-mit ==0.0.6
     - posthog >=6.7.11              # relaxed ==6.7.11: module-level API preserved in 7.x
-    - mistral-common ==1.12.0    # relaxed ==1.11.0: patch diff, stable APIs
-    # relaxed ==0.49.1: 0.49.1 has only a cuda128 build, but torchao 0.17.0 has
-    # only cuda129/130 — 0.49.2 adds cuda129, aligning both on CUDA 12.9.
+    - mistral-common ==1.12.0
     - bitsandbytes ==0.50.2                  # [gpu_variant != "cuda"]
     - bitsandbytes ==0.50.2 *cuda*           # [gpu_variant == "cuda"]
     - triton >=3.4.0
     - xformers >=0.0.33.post2
-    # relaxed ==0.7.0: trl 1.5.1's liger extra requires >=0.8.0 (run_constrained).
     - liger-kernel ==0.8.5
     # cuda-only: torchao's CPU build needs cpu_mkl pytorch (Intel OpenMP), which
     # clashes with numba; it's a GPU quantization lib, useless on the CPU build.

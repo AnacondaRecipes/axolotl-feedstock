@@ -59,7 +59,7 @@ requirements:
     - tokenizers ==0.23.3
     - transformers ==5.20.1
     - accelerate ==1.15.0
-    - datasets ==5.0.1
+    - datasets >=5.0.1,<5.2  # relaxed ==5.0.1: newer 5.1.0 is available; trl/transformers only set floors (>=4.7.0 / >=2.15.0)
     - trl ==1.14.1
     - hf-xet >=1.5.2
     # kernels dropped: transformers 5.9.0 requires kernels <0.13 (disjoint from

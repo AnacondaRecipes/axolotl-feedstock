@@ -1,5 +1,5 @@
 {% set name = "axolotl" %}
-{% set version = "0.17.0" %}
+{% set version = "0.21.1" %}
 {% set build_number = 0 %}
 {% set cuda_enabled = (gpu_variant or "none") == "cuda" %}
 {% set build = build_number + 100 if cuda_enabled else build_number %}
@@ -10,7 +10,7 @@ package:
 
 source:
   url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  sha256: 3bb4ce6d8158a2b598560808d8fe5148081f79eeba7e1bd649fe3211f0c87733
+  sha256: afea33eb36aa578699b128713692ea409642ffad6243c7cbbf02c1a986471515
 
 build:
   # +100 on cuda so conda prefers it where __cuda is present. Literal per-variant
@@ -19,9 +19,7 @@ build:
   number: 0    # [gpu_variant != "cuda"]
   number: 100  # [gpu_variant == "cuda"]
   # linux-64 only (triton/fla-core/liger/flash are linux-64-only on pkgs/main).
-  # Upstream floor is py3.10 (requires-python >=3.10); py3.10 additionally
-  # skipped here because numpy >=2.2.6 has no py3.10 build on pkgs/main.
-  skip: true  # [not linux64 or py<311]
+  skip: true  # [not linux64 or py<312]
   # cpu_/cuda_ prefix keeps the two variants from deduping into one package.
   string: cpu_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ build }}    # [gpu_variant != "cuda"]
   string: cuda_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ build }}   # [gpu_variant == "cuda"]
@@ -53,21 +51,22 @@ requirements:
     # cuda129/130 — 12.9 is the overlap).
     - cuda-version >=12.9,<13               # [gpu_variant == "cuda"]
     # *cuda* forces the CUDA pytorch build (also avoids the cpu_mkl / numba OpenMP clash).
-    - pytorch >=2.9.1                        # [gpu_variant != "cuda"]
-    - pytorch >=2.9.1 *cuda*                 # [gpu_variant == "cuda"]
+    - pytorch >=2.13.0,<2.15.0                        # [gpu_variant != "cuda"]
+    - pytorch >=2.13.0,<2.15.0 *cuda*                 # [gpu_variant == "cuda"]
     - packaging ==26.0
-    - huggingface_hub >=1.1.7
-    - peft >=0.19.1,<0.20.0
-    - tokenizers >=0.22.1
-    - transformers ==5.9.0
-    - accelerate ==1.13.0
-    - datasets >=4.8.4,<4.9.0
-    - trl ==1.5.1
-    - hf-xet ==1.4.3
+    - huggingface_hub >=1.31.0
+    - peft ==0.21.2
+    - tokenizers ==0.23.3
+    - transformers ==5.20.1
+    - accelerate ==1.15.0
+    - datasets >=5.0.1,<5.2  # relaxed ==5.0.1: newer 5.1.0 is available; trl/transformers only set floors (>=4.7.0 / >=2.15.0)
+    - trl ==1.14.1
+    - hf-xet >=1.5.2
     # kernels dropped: transformers 5.9.0 requires kernels <0.13 (disjoint from
     # axolotl's ==0.13.0); axolotl never imports the HF kernels package.
-    - trackio >=0.16.1
-    - typing_extensions >=4.15.0
+    # kernels >=0.17.2,<0.18.0
+    - trackio ==0.40.0
+    - typing_extensions ==4.15.0
     # relaxed ==1.16.2: axolotl's only use is optimum.bettertransformer (lazy,
     # behind the flash_optimum flag), which targets transformers 4.x internals —
     # inoperative with the transformers ==5.9.0 pin on ANY optimum version, so a
@@ -75,28 +74,28 @@ requirements:
     - optimum >=1.16.2
     - hf-transfer
     - sentencepiece
-    - gradio >=6.2.0,<7.0
-    - modal-client ==1.3.0.post1
-    - pydantic >=2.10.6
+    - gradio ==6.29.1
+    - pydantic ==2.13.5
     - addict
     - fire
-    - pyyaml >=6.0
+    - pyyaml ==6.0.3
     - requests
+    - certifi >=2026.10.19
     - wandb
     - einops
     - colorama
-    - numba >=0.61.2
-    - numpy >=2.2.6
-    - typer <0.26.0
+    - numba >=0.63.1,<1.0
+    - numpy >=2.1,<3.0
+    - typer ==0.25.1
     - evaluate ==0.4.1
     - scipy
     - nvidia-ml-py >=12.560.30      # relaxed ==12.560.30: stable pynvml bindings only
     - art
     - tensorboard
     - python-dotenv >=1.0.1         # relaxed ==1.0.1: only load_dotenv is used
-    - s3fs >=2024.5.0
-    - gcsfs >=2025.3.0
-    - adlfs >=2024.5.0
+    - s3fs ==2025.10.0
+    - gcsfs ==2025.10.0
+    - adlfs ==2026.2.0
     - ocifs ==1.3.2
     # relaxed ==0.22.0: 0.22.0 links zstd 1.5.5; arrow-cpp (via datasets) needs >=1.5.7.
     - zstandard >=0.22.0
@@ -106,24 +105,21 @@ requirements:
     - immutabledict >=4.2.0         # relaxed ==4.2.0: transitive-only, not imported
     - antlr4-python3-runtime ==4.13.2
     - schedulefree ==1.4.1
-    - openenv-core ==0.1.0
+    - openenv-core >=0.1.0
     - axolotl-contribs-lgpl ==0.0.7
     - axolotl-contribs-mit ==0.0.6
     - posthog >=6.7.11              # relaxed ==6.7.11: module-level API preserved in 7.x
-    - mistral-common >=1.11.0,<2    # relaxed ==1.11.0: patch diff, stable APIs
-    # relaxed ==0.49.1: 0.49.1 has only a cuda128 build, but torchao 0.17.0 has
-    # only cuda129/130 — 0.49.2 adds cuda129, aligning both on CUDA 12.9.
-    - bitsandbytes >=0.49.1                  # [gpu_variant != "cuda"]
-    - bitsandbytes >=0.49.1 *cuda*           # [gpu_variant == "cuda"]
+    - mistral-common ==1.12.0
+    - bitsandbytes ==0.50.2                  # [gpu_variant != "cuda"]
+    - bitsandbytes ==0.50.2 *cuda*           # [gpu_variant == "cuda"]
     - triton >=3.4.0
     - xformers >=0.0.33.post2
-    # relaxed ==0.7.0: trl 1.5.1's liger extra requires >=0.8.0 (run_constrained).
-    - liger-kernel >=0.8.0
+    - liger-kernel ==0.8.5
     # cuda-only: torchao's CPU build needs cpu_mkl pytorch (Intel OpenMP), which
     # clashes with numba; it's a GPU quantization lib, useless on the CPU build.
-    - torchao ==0.17.0                       # [gpu_variant == "cuda"]
-    - fla-core ==0.4.1
-    - flash-linear-attention ==0.4.1
+    - torchao ==0.18.0                       # [gpu_variant == "cuda"]
+    - fla-core ==0.5.2
+    - flash-linear-attention ==0.5.2
   run_constrained:
     # Bounded optional extras (integration features); bounds from upstream
     # pyproject. Unbounded extras (mlflow, opentelemetry, prometheus-client)
@@ -131,10 +127,10 @@ requirements:
     # bounded optimizer/quantizer extras not packaged for conda (auto-gptq,
     # mamba-ssm, came-pytorch, lomo-optim, q-galore-torch, torch-optimi,
     # ring-flash-attn, llmcompressor, fbgemm-gpu-genai).
-    - flash-attn ==2.8.3
-    - deepspeed >=0.18.6,<0.19.0
-    - ray-train >=2.52.1
-    - vllm >=0.15.0
+    # flash-attn-4 is currently in pre-release phase.
+    - deepspeed >=0.18.6,<0.20.0
+    - ray-train >=2.59.0
+    - vllm >=0.30.0
 
 # full training runs (GPU/multi-GPU, e2e)
 {% set ignore_tests = " --ignore=tests/e2e" %}

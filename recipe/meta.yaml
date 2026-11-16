@@ -197,6 +197,8 @@ test:
     # triton's runtime JIT compiles a cuda_utils shim against cuda.h, which
     # cuda-cudart-dev provides at $PREFIX/targets/x86_64-linux/include
     - cuda-cudart-dev               # [gpu_variant == "cuda"]
+    - torchao                       # [gpu_variant == "cuda"]
+    - torchvision                   # [gpu_variant == "cuda"]
 
 about:
   home: https://axolotl.ai/

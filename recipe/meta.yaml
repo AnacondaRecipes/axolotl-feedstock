@@ -155,9 +155,9 @@ requirements:
 # skip CI/CD tests
 {% set ignore_tests = ignore_tests + " --ignore=tests/scripts" %}
 
-
-# transformers kernelize() needs the HF `kernels` package, unshippable at
-# 0.17.0 (transformers 5.9 caps kernels <0.13; axolotl pins ==0.13.0)
+# missing HF `kernels` package (mismatch ranges). restore once included.
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_mamba_packing_patch.py::TestKernelIntrospection::test_hub_kernel_signature_is_read_after_kernelize" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/utils/schemas/validation/test_flash_attn_availability.py" %}
 {% set deselect_tests = " --deselect=tests/monkeypatch/test_gemma4_kernelize.py::test_full_model_kernelize_succeeds_with_patch" %}
 # torch.compile/inductor requires a system C++ toolchain (g++) on both CPU
 # and GPU paths — a pytorch runtime expectation, absent from conda test envs

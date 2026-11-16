@@ -95,7 +95,7 @@ requirements:
     - python-dotenv >=1.0.1         # relaxed ==1.0.1: only load_dotenv is used
     - s3fs ==2025.10.0
     - gcsfs ==2025.10.0
-    - adlfs ==2026.2.0
+    - adlfs >=2026.2.0,<2027.0      # relaxed ==2026.2.0: newer version available
     - ocifs ==1.3.2
     # relaxed ==0.22.0: 0.22.0 links zstd 1.5.5; arrow-cpp (via datasets) needs >=1.5.7.
     - zstandard >=0.22.0

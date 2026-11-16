@@ -164,6 +164,7 @@ test:
     - tests
     # tests/utils/test_cuda13.py sources scripts/cuda13_env.sh by relative path
     - scripts
+    - pyproject.toml  # for the pytest markers
   imports:
     - axolotl
     # axolotl.cli.main (run via --help below) already imports torch / transformers /

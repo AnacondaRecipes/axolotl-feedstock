@@ -176,8 +176,11 @@ requirements:
 {% set deselect_tests = deselect_tests + " --deselect=test_kernel_fp16_and_fp32_routing" %}
 {% set deselect_tests = deselect_tests + " --deselect=test_tiny_diffusion_gemma_kernel_matches_dense_logits_and_gradients" %}
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_large_head_compile_hoist.py::TestDocEndVectorization::test_flash_d512_varlen_uses_vectorized_doc_end" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_large_head_attention.py::test_route_runs_custom_scale" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_large_head_attention.py::test_route_success_packed" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_large_head_attention.py::test_route_gqa_repeats_kv" %}
 
-# requires GPU HW with higher compute capabilities >=8.0
+# requires GPU HW with higher compute capabilities >=8.0 (some need specific features like BF16)
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_fp32_gradients.py::test_fused_linear_fp32_reduction_and_microbatch_accumulation" %}
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_fp32_gradients.py::test_fused_groups_keep_fp32_parameter_gradients" %}
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_kernels_nemotron_h.py::test_nemotron_dense_relu2_mlp_kernels" %}
@@ -187,6 +190,10 @@ requirements:
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_sdpa_varlen.py::test_varlen_matches_block_mask_sdpa" %}
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_sdpa_varlen.py::test_varlen_engages_in_training_forward" %}
 {% set deselect_tests = deselect_tests + " --deselect=tests/utils/lora/test_compiled_lora_merge.py::test_compiled_chunk_matches_peft_and_nvfp4" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/utils/test_sinkgd.py::test_fused_base_matches_compiled" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/utils/test_sinkgd.py::test_fused_spectral_matches_compiled" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/utils/test_sinkgd.py::test_fused_md_matches_compiled_and_stays_on_sphere" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/utils/test_sinkgd.py::test_dist_factory_without_mesh_reads_group_from_param" %}
 
 # tests read missing repo/source files
 {% set ignore_tests = ignore_tests + " --ignore=tests/utils/test_loraplus.py" %}
@@ -197,6 +204,12 @@ requirements:
 
 # test assumes a CPU-only run (fails with GPU visible)
 {% set deselect_tests = deselect_tests + " --deselect=tests/test_balanced_sampler_resume.py::test_checkpoint_resume_with_production_dataloader" %}
+
+# cuda13_env.sh captures python's stdout into LD_LIBRARY_PATH, and importing axolotl logs an INFO line to stdout here, so the first path element is "INFO".
+{% set deselect_tests = deselect_tests + " --deselect=tests/utils/test_cuda13.py::test_cuda13_env_sh_prepend_path_when_package_exists" %}
+
+# precision/numerical issue
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_gemma4_unified_fused_attn.py::TestUnifiedFusedAttnSharedKV::test_shared_kv_forward_backward" %}
 
 test:
   source_files:

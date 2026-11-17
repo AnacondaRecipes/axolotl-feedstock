@@ -211,6 +211,9 @@ requirements:
 # precision/numerical issue
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_gemma4_unified_fused_attn.py::TestUnifiedFusedAttnSharedKV::test_shared_kv_forward_backward" %}
 
+# test run order dependency. works in isolation, but fails as part of the test suite (fsdp2_qlora parametrization)
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_peft_prep_patch.py::test_patch_manager_applies_patch" %}
+
 test:
   source_files:
     - tests

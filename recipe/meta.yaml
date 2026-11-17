@@ -220,6 +220,7 @@ test:
     - cuda-cudart-dev               # [gpu_variant == "cuda"]
     - torchao                       # [gpu_variant == "cuda"]
     - torchvision                   # [gpu_variant == "cuda"]
+    - gxx_linux-64                  # [gpu_variant == "cuda"]
 
 about:
   home: https://axolotl.ai/

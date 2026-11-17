@@ -154,7 +154,7 @@ requirements:
 
 # skip CI/CD tests (uses ./cicd directory)
 {% set ignore_tests = ignore_tests + " --ignore=tests/scripts" %}
-{% set ignore_tests = ignore_tests + " --ignore=test_ci_hf_cache.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_ci_hf_cache.py" %}
 
 # missing HF `kernels` package (mismatch ranges). restore once included.
 {% set deselect_tests = " --deselect=tests/monkeypatch/test_gemma4_kernelize.py::test_full_model_kernelize_succeeds_with_patch" %}

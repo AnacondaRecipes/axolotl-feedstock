@@ -195,6 +195,9 @@ requirements:
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_qwen3_5_compiled_loop.py::TestDecoderLoopCompiles::test_fa2_loop_compiles_with_varlen_kwargs" %}
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_qwen3_5_compiled_loop.py::TestDecoderLoopCompiles::test_fa2_compiled_matches_eager_grads" %}
 
+# test assumes a CPU-only run (fails with GPU visible)
+{% set deselect_tests = deselect_tests + " --deselect=tests/test_balanced_sampler_resume.py::test_checkpoint_resume_with_production_dataloader" %}
+
 test:
   source_files:
     - tests

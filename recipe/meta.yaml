@@ -169,12 +169,12 @@ requirements:
 
 # requires GPUs with more memory. triton.runtime.errors.OutOfResources: out of resource: shared memory
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_flash_attn_d512.py::test_dense_fwd_bwd_matches_sdpa" %}
-{% set deselect_tests = deselect_tests + " --deselect=test_noncontiguous_gqa_grads_match_sdpa" %}
-{% set deselect_tests = deselect_tests + " --deselect=test_varlen_matches_per_document" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_flash_attn_d512.py::test_noncontiguous_gqa_grads_match_sdpa" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_flash_attn_d512.py::test_varlen_matches_per_document" %}
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_flash_attn_d512_segments.py::test_kernel_matches_reference_on_decoder_masks" %}
-{% set deselect_tests = deselect_tests + " --deselect=test_kernel_matches_reference_on_encoder_masks" %}
-{% set deselect_tests = deselect_tests + " --deselect=test_kernel_fp16_and_fp32_routing" %}
-{% set deselect_tests = deselect_tests + " --deselect=test_tiny_diffusion_gemma_kernel_matches_dense_logits_and_gradients" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_flash_attn_d512_segments.py::test_kernel_matches_reference_on_encoder_masks" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_flash_attn_d512_segments.py::test_kernel_fp16_and_fp32_routing" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_flash_attn_d512_segments.py::test_tiny_diffusion_gemma_kernel_matches_dense_logits_and_gradients" %}
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_large_head_compile_hoist.py::TestDocEndVectorization::test_flash_d512_varlen_uses_vectorized_doc_end" %}
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_large_head_attention.py::test_route_runs_custom_scale" %}
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_large_head_attention.py::test_route_success_packed" %}

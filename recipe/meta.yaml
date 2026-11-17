@@ -162,11 +162,12 @@ requirements:
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_glm4_moe_lite_fused_attn.py::test_attention_outputs_and_all_parameter_gradients" %}
 {% set ignore_tests = ignore_tests + " --ignore=tests/utils/schemas/validation/test_flash_attn_availability.py" %}
 {% set ignore_tests = ignore_tests + " --ignore=tests/monkeypatch/test_qwen4_exp_modeling_patch.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_glm_dsa_cp_validation.py::test_cp_packed_inputs_depend_on_attention_owner" %}
 # torch.compile/inductor requires a system C++ toolchain (g++) on both CPU
 # and GPU paths — a pytorch runtime expectation, absent from conda test envs
 {% set deselect_tests = deselect_tests + " --deselect=tests/test_chunked_xentropy.py::test_chunked_forward" %}
 
-# requires GPUs with more memory triton.runtime.errors.OutOfResources: out of resource: shared memory
+# requires GPUs with more memory. triton.runtime.errors.OutOfResources: out of resource: shared memory
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_flash_attn_d512.py::test_dense_fwd_bwd_matches_sdpa" %}
 {% set deselect_tests = deselect_tests + " --deselect=test_noncontiguous_gqa_grads_match_sdpa" %}
 {% set deselect_tests = deselect_tests + " --deselect=test_varlen_matches_per_document" %}

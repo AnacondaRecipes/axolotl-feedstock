@@ -174,6 +174,13 @@ requirements:
 {% set deselect_tests = deselect_tests + " --deselect=test_tiny_diffusion_gemma_kernel_matches_dense_logits_and_gradients" %}
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_large_head_compile_hoist.py::TestDocEndVectorization::test_flash_d512_varlen_uses_vectorized_doc_end" %}
 
+# requires GPU HW with higher compute capabilities >=8.0
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_fp32_gradients.py::test_fused_linear_fp32_reduction_and_microbatch_accumulation" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_fp32_gradients.py::test_fused_groups_keep_fp32_parameter_gradients" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_kernels_nemotron_h.py::test_nemotron_dense_relu2_mlp_kernels" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_kernels_nvfp4.py::test_native_nvfp4_projection_forward" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_kernels_nvfp4.py::test_native_nvfp4_checkpoint_and_retained_backward" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_kernels_nvfp4.py::test_native_nvfp4_nemotron_attention_installer" %}
 
 test:
   source_files:

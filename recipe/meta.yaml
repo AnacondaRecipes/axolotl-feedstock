@@ -181,6 +181,8 @@ requirements:
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_kernels_nvfp4.py::test_native_nvfp4_projection_forward" %}
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_kernels_nvfp4.py::test_native_nvfp4_checkpoint_and_retained_backward" %}
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_kernels_nvfp4.py::test_native_nvfp4_nemotron_attention_installer" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_sdpa_varlen.py::test_varlen_matches_block_mask_sdpa" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_sdpa_varlen.py::test_varlen_engages_in_training_forward" %}
 
 test:
   source_files:

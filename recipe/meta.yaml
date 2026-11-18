@@ -214,6 +214,11 @@ requirements:
 # test run order dependency. works in isolation, but fails as part of the test suite (fsdp2_qlora parametrization)
 {% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_peft_prep_patch.py::test_patch_manager_applies_patch" %}
 
+# GPU only
+{% set ignore_tests = ignore_tests + " --ignore=tests/monkeypatch/test_torchao_deepspeed_zero3.py" %}  # [gpu_variant != "cuda"]
+{% set ignore_tests = ignore_tests + " --ignore=tests/utils/test_nvfp4_quantization_config.py" %}  # [gpu_variant != "cuda"]
+{% set ignore_tests = ignore_tests + " --ignore=tests/utils/test_sinkgd.py" %}  # [gpu_variant != "cuda"]
+
 test:
   source_files:
     - tests

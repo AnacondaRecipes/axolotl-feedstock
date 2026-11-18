@@ -220,7 +220,7 @@ requirements:
 {% set ignore_tests = ignore_tests + " --ignore=tests/utils/test_sinkgd.py" %}  # [gpu_variant != "cuda"]
 
 # uses torchao (CPU)
-{% set deselect_tests = deselect_tests + " --ignore=tests/loaders/test_nf4_adapter_init_dequant.py::test_staged_adapter_init_does_not_dequantize" %}  # [gpu_variant != "cuda"]
+{% set deselect_tests = deselect_tests + " --deselect=tests/loaders/test_nf4_adapter_init_dequant.py::test_staged_adapter_init_does_not_dequantize" %}  # [gpu_variant != "cuda"]
 {% set ignore_tests = ignore_tests + " --ignore=tests/monkeypatch/test_nf4_loading.py" %}  # [gpu_variant != "cuda"]
 {% set ignore_tests = ignore_tests + " --ignore=tests/monkeypatch/test_torchao_tp.py" %}  # [gpu_variant != "cuda"]
 {% set ignore_tests = ignore_tests + " --ignore=tests/monkeypatch/test_torchao_tp_lora.py" %}  # [gpu_variant != "cuda"]

@@ -113,7 +113,7 @@ requirements:
     - bitsandbytes ==0.50.2                  # [gpu_variant != "cuda"]
     - bitsandbytes ==0.50.2 *cuda*           # [gpu_variant == "cuda"]
     - triton >=3.4.0
-    - xformers >=0.0.33.post2
+    - xformers >=0.0.33.post2                # [gpu_variant == "cuda"]
     - liger-kernel ==0.8.5
     # cuda-only: torchao's CPU build needs cpu_mkl pytorch (Intel OpenMP), which
     # clashes with numba; it's a GPU quantization lib, useless on the CPU build.
@@ -235,7 +235,7 @@ test:
     # remote-fs, integrations) — prove they load in this exact env, where
     # combined-env import clashes (e.g. OpenMP) would surface.
     - python -c "import s3fs, gcsfs, adlfs, ocifs, wandb, evaluate, gradio, mistral_common"
-    - python -c "import bitsandbytes, xformers, liger_kernel, fla"           # [gpu_variant != "cuda"]
+    - python -c "import bitsandbytes, liger_kernel, fla"           # [gpu_variant != "cuda"]
     - python -c "import bitsandbytes, torchao, xformers, liger_kernel, fla"  # [gpu_variant == "cuda"]
     # Curated non-e2e unit subset (utils, prompt_strategies, monkeypatch, root
     # unit files). NOTE: the root conftest's autouse session fixtures

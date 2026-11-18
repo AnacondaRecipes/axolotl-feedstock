@@ -258,11 +258,11 @@ test:
     - pip
     - pytest
     - torchvision
+    - gxx_linux-64
     # triton's runtime JIT compiles a cuda_utils shim against cuda.h, which
     # cuda-cudart-dev provides at $PREFIX/targets/x86_64-linux/include
     - cuda-cudart-dev               # [gpu_variant == "cuda"]
     - torchao                       # [gpu_variant == "cuda"]
-    - gxx_linux-64                  # [gpu_variant == "cuda"]
 
 about:
   home: https://axolotl.ai/

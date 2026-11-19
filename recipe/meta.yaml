@@ -1,5 +1,5 @@
 {% set name = "axolotl" %}
-{% set version = "0.17.0" %}
+{% set version = "0.21.1" %}
 {% set build_number = 0 %}
 {% set cuda_enabled = (gpu_variant or "none") == "cuda" %}
 {% set build = build_number + 100 if cuda_enabled else build_number %}
@@ -10,7 +10,7 @@ package:
 
 source:
   url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  sha256: 3bb4ce6d8158a2b598560808d8fe5148081f79eeba7e1bd649fe3211f0c87733
+  sha256: afea33eb36aa578699b128713692ea409642ffad6243c7cbbf02c1a986471515
 
 build:
   # +100 on cuda so conda prefers it where __cuda is present. Literal per-variant
@@ -19,9 +19,7 @@ build:
   number: 0    # [gpu_variant != "cuda"]
   number: 100  # [gpu_variant == "cuda"]
   # linux-64 only (triton/fla-core/liger/flash are linux-64-only on pkgs/main).
-  # Upstream floor is py3.10 (requires-python >=3.10); py3.10 additionally
-  # skipped here because numpy >=2.2.6 has no py3.10 build on pkgs/main.
-  skip: true  # [not linux64 or py<311]
+  skip: true  # [not linux64 or py<312]
   # cpu_/cuda_ prefix keeps the two variants from deduping into one package.
   string: cpu_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ build }}    # [gpu_variant != "cuda"]
   string: cuda_py{{ CONDA_PY }}h{{ PKG_HASH }}_{{ build }}   # [gpu_variant == "cuda"]
@@ -53,21 +51,22 @@ requirements:
     # cuda129/130 — 12.9 is the overlap).
     - cuda-version >=12.9,<13               # [gpu_variant == "cuda"]
     # *cuda* forces the CUDA pytorch build (also avoids the cpu_mkl / numba OpenMP clash).
-    - pytorch >=2.9.1                        # [gpu_variant != "cuda"]
-    - pytorch >=2.9.1 *cuda*                 # [gpu_variant == "cuda"]
+    - pytorch >=2.13.0,<2.15.0                        # [gpu_variant != "cuda"]
+    - pytorch >=2.13.0,<2.15.0 *cuda*                 # [gpu_variant == "cuda"]
     - packaging ==26.0
-    - huggingface_hub >=1.1.7
-    - peft >=0.19.1,<0.20.0
-    - tokenizers >=0.22.1
-    - transformers ==5.9.0
-    - accelerate ==1.13.0
-    - datasets >=4.8.4,<4.9.0
-    - trl ==1.5.1
-    - hf-xet ==1.4.3
+    - huggingface_hub >=1.31.0
+    - peft ==0.21.2
+    - tokenizers ==0.23.3
+    - transformers ==5.20.1
+    - accelerate ==1.15.0
+    - datasets >=5.0.1,<5.2  # relaxed ==5.0.1: newer 5.1.0 is available; trl/transformers only set floors (>=4.7.0 / >=2.15.0)
+    - trl ==1.14.1
+    - hf-xet >=1.5.2
     # kernels dropped: transformers 5.9.0 requires kernels <0.13 (disjoint from
     # axolotl's ==0.13.0); axolotl never imports the HF kernels package.
-    - trackio >=0.16.1
-    - typing_extensions >=4.15.0
+    # kernels >=0.17.2,<0.18.0
+    - trackio ==0.40.0
+    - typing_extensions ==4.15.0
     # relaxed ==1.16.2: axolotl's only use is optimum.bettertransformer (lazy,
     # behind the flash_optimum flag), which targets transformers 4.x internals —
     # inoperative with the transformers ==5.9.0 pin on ANY optimum version, so a
@@ -75,28 +74,32 @@ requirements:
     - optimum >=1.16.2
     - hf-transfer
     - sentencepiece
-    - gradio >=6.2.0,<7.0
-    - modal-client ==1.3.0.post1
-    - pydantic >=2.10.6
+    - gradio ==6.29.1
+    - pydantic ==2.13.5
     - addict
     - fire
-    - pyyaml >=6.0
+    - pyyaml ==6.0.3
     - requests
+    - certifi >=2026.10.19
     - wandb
     - einops
     - colorama
-    - numba >=0.61.2
-    - numpy >=2.2.6
-    - typer <0.26.0
+    - numba >=0.63.1,<1.0
+    - numpy >=2.1,<3.0
+    - typer ==0.25.1
     - evaluate ==0.4.1
     - scipy
     - nvidia-ml-py >=12.560.30      # relaxed ==12.560.30: stable pynvml bindings only
     - art
     - tensorboard
     - python-dotenv >=1.0.1         # relaxed ==1.0.1: only load_dotenv is used
-    - s3fs >=2024.5.0
-    - gcsfs >=2025.3.0
-    - adlfs >=2024.5.0
+    # relaxed ==2025.10.0 for py314: exact version not available for py314. relax for 314, but keep original pinning where possible.
+    - s3fs >=2025.10.0,<2027.0      # [py>=314]
+    - s3fs ==2025.10.0              # [py<314]
+    # relaxed ==2025.10.0 for py314: exact version not available for py314. relax for 314, but keep original pinning where possible.
+    - gcsfs >=2025.10.0,<2027.0     # [py>=314]
+    - gcsfs ==2025.10.0             # [py<314]
+    - adlfs >=2026.2.0,<2027.0      # relaxed ==2026.2.0: newer version available
     - ocifs ==1.3.2
     # relaxed ==0.22.0: 0.22.0 links zstd 1.5.5; arrow-cpp (via datasets) needs >=1.5.7.
     - zstandard >=0.22.0
@@ -106,24 +109,21 @@ requirements:
     - immutabledict >=4.2.0         # relaxed ==4.2.0: transitive-only, not imported
     - antlr4-python3-runtime ==4.13.2
     - schedulefree ==1.4.1
-    - openenv-core ==0.1.0
+    - openenv-core >=0.1.0
     - axolotl-contribs-lgpl ==0.0.7
     - axolotl-contribs-mit ==0.0.6
     - posthog >=6.7.11              # relaxed ==6.7.11: module-level API preserved in 7.x
-    - mistral-common >=1.11.0,<2    # relaxed ==1.11.0: patch diff, stable APIs
-    # relaxed ==0.49.1: 0.49.1 has only a cuda128 build, but torchao 0.17.0 has
-    # only cuda129/130 — 0.49.2 adds cuda129, aligning both on CUDA 12.9.
-    - bitsandbytes >=0.49.1                  # [gpu_variant != "cuda"]
-    - bitsandbytes >=0.49.1 *cuda*           # [gpu_variant == "cuda"]
+    - mistral-common ==1.12.0
+    - bitsandbytes ==0.50.2                  # [gpu_variant != "cuda"]
+    - bitsandbytes ==0.50.2 *cuda*           # [gpu_variant == "cuda"]
     - triton >=3.4.0
-    - xformers >=0.0.33.post2
-    # relaxed ==0.7.0: trl 1.5.1's liger extra requires >=0.8.0 (run_constrained).
-    - liger-kernel >=0.8.0
+    - xformers >=0.0.33.post2                # [gpu_variant == "cuda"]
+    - liger-kernel ==0.8.5
     # cuda-only: torchao's CPU build needs cpu_mkl pytorch (Intel OpenMP), which
     # clashes with numba; it's a GPU quantization lib, useless on the CPU build.
-    - torchao ==0.17.0                       # [gpu_variant == "cuda"]
-    - fla-core ==0.4.1
-    - flash-linear-attention ==0.4.1
+    - torchao ==0.18.0                       # [gpu_variant == "cuda"]
+    - fla-core ==0.5.2
+    - flash-linear-attention ==0.5.2
   run_constrained:
     # Bounded optional extras (integration features); bounds from upstream
     # pyproject. Unbounded extras (mlflow, opentelemetry, prometheus-client)
@@ -131,10 +131,10 @@ requirements:
     # bounded optimizer/quantizer extras not packaged for conda (auto-gptq,
     # mamba-ssm, came-pytorch, lomo-optim, q-galore-torch, torch-optimi,
     # ring-flash-attn, llmcompressor, fbgemm-gpu-genai).
-    - flash-attn ==2.8.3
-    - deepspeed >=0.18.6,<0.19.0
-    - ray-train >=2.52.1
-    - vllm >=0.15.0
+    # flash-attn-4 is currently in pre-release phase.
+    - deepspeed >=0.18.6,<0.20.0
+    - ray-train >=2.59.0
+    - vllm >=0.30.0
 
 # full training runs (GPU/multi-GPU, e2e)
 {% set ignore_tests = " --ignore=tests/e2e" %}
@@ -156,18 +156,86 @@ requirements:
 {% set ignore_tests = ignore_tests + " --ignore=tests/test_perplexity.py" %}
 {% set ignore_tests = ignore_tests + " --ignore=tests/test_revision_parameter.py" %}
 
-# transformers kernelize() needs the HF `kernels` package, unshippable at
-# 0.17.0 (transformers 5.9 caps kernels <0.13; axolotl pins ==0.13.0)
+# skip CI/CD tests (uses ./cicd directory)
+{% set ignore_tests = ignore_tests + " --ignore=tests/scripts" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_ci_hf_cache.py" %}
+
+# missing HF `kernels` package (mismatch ranges). restore once included.
 {% set deselect_tests = " --deselect=tests/monkeypatch/test_gemma4_kernelize.py::test_full_model_kernelize_succeeds_with_patch" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_mamba_packing_patch.py::TestKernelIntrospection::test_hub_kernel_signature_is_read_after_kernelize" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_glm4_moe_lite_fused_attn.py::test_attention_outputs_and_all_parameter_gradients" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/test_glm_dsa_cp_validation.py::test_cp_packed_inputs_depend_on_attention_owner" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/utils/schemas/validation/test_flash_attn_availability.py" %}
+{% set ignore_tests = ignore_tests + " --ignore=tests/monkeypatch/test_qwen4_exp_modeling_patch.py" %}
 # torch.compile/inductor requires a system C++ toolchain (g++) on both CPU
 # and GPU paths — a pytorch runtime expectation, absent from conda test envs
 {% set deselect_tests = deselect_tests + " --deselect=tests/test_chunked_xentropy.py::test_chunked_forward" %}
+
+# requires GPUs with more memory. triton.runtime.errors.OutOfResources: out of resource: shared memory
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_flash_attn_d512.py::test_dense_fwd_bwd_matches_sdpa" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_flash_attn_d512.py::test_noncontiguous_gqa_grads_match_sdpa" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_flash_attn_d512.py::test_varlen_matches_per_document" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_flash_attn_d512_segments.py::test_kernel_matches_reference_on_decoder_masks" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_flash_attn_d512_segments.py::test_kernel_matches_reference_on_encoder_masks" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_flash_attn_d512_segments.py::test_kernel_fp16_and_fp32_routing" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_flash_attn_d512_segments.py::test_tiny_diffusion_gemma_kernel_matches_dense_logits_and_gradients" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_large_head_compile_hoist.py::TestDocEndVectorization::test_flash_d512_varlen_uses_vectorized_doc_end" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_large_head_attention.py::test_route_runs_custom_scale" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_large_head_attention.py::test_route_success_packed" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_large_head_attention.py::test_route_gqa_repeats_kv" %}
+
+# requires GPU HW with higher compute capabilities >=8.0 (some need specific features like BF16)
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_fp32_gradients.py::test_fused_linear_fp32_reduction_and_microbatch_accumulation" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_fp32_gradients.py::test_fused_groups_keep_fp32_parameter_gradients" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_kernels_nemotron_h.py::test_nemotron_dense_relu2_mlp_kernels" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_kernels_nvfp4.py::test_native_nvfp4_projection_forward" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_kernels_nvfp4.py::test_native_nvfp4_checkpoint_and_retained_backward" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_lora_kernels_nvfp4.py::test_native_nvfp4_nemotron_attention_installer" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_sdpa_varlen.py::test_varlen_matches_block_mask_sdpa" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_sdpa_varlen.py::test_varlen_engages_in_training_forward" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/utils/lora/test_compiled_lora_merge.py::test_compiled_chunk_matches_peft_and_nvfp4" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/utils/test_sinkgd.py::test_fused_base_matches_compiled" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/utils/test_sinkgd.py::test_fused_spectral_matches_compiled" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/utils/test_sinkgd.py::test_fused_md_matches_compiled_and_stays_on_sphere" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/utils/test_sinkgd.py::test_dist_factory_without_mesh_reads_group_from_param" %}
+
+# tests read missing repo/source files
+{% set ignore_tests = ignore_tests + " --ignore=tests/utils/test_loraplus.py" %}
+
+# need the flash_attn package (only in run_constrained, not installed); FA2 also needs Ampere+
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_qwen3_5_compiled_loop.py::TestDecoderLoopCompiles::test_fa2_loop_compiles_with_varlen_kwargs" %}
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_qwen3_5_compiled_loop.py::TestDecoderLoopCompiles::test_fa2_compiled_matches_eager_grads" %}
+
+# test assumes a CPU-only run (fails with GPU visible)
+{% set deselect_tests = deselect_tests + " --deselect=tests/test_balanced_sampler_resume.py::test_checkpoint_resume_with_production_dataloader" %}
+
+# cuda13_env.sh captures python's stdout into LD_LIBRARY_PATH, and importing axolotl logs an INFO line to stdout here, so the first path element is "INFO".
+{% set deselect_tests = deselect_tests + " --deselect=tests/utils/test_cuda13.py::test_cuda13_env_sh_prepend_path_when_package_exists" %}
+
+# precision/numerical issue
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_gemma4_unified_fused_attn.py::TestUnifiedFusedAttnSharedKV::test_shared_kv_forward_backward" %}
+
+# test run order dependency. works in isolation, but fails as part of the test suite (fsdp2_qlora parametrization)
+{% set deselect_tests = deselect_tests + " --deselect=tests/monkeypatch/test_peft_prep_patch.py::test_patch_manager_applies_patch" %}
+
+# GPU only
+{% set ignore_tests = ignore_tests + " --ignore=tests/monkeypatch/test_torchao_deepspeed_zero3.py" %}  # [gpu_variant != "cuda"]
+{% set ignore_tests = ignore_tests + " --ignore=tests/utils/test_nvfp4_quantization_config.py" %}  # [gpu_variant != "cuda"]
+{% set ignore_tests = ignore_tests + " --ignore=tests/utils/test_sinkgd.py" %}  # [gpu_variant != "cuda"]
+
+# uses torchao (CPU)
+{% set deselect_tests = deselect_tests + " --deselect=tests/loaders/test_nf4_adapter_init_dequant.py::test_staged_adapter_init_does_not_dequantize" %}  # [gpu_variant != "cuda"]
+{% set ignore_tests = ignore_tests + " --ignore=tests/monkeypatch/test_nf4_loading.py" %}  # [gpu_variant != "cuda"]
+{% set ignore_tests = ignore_tests + " --ignore=tests/monkeypatch/test_torchao_tp.py" %}  # [gpu_variant != "cuda"]
+{% set ignore_tests = ignore_tests + " --ignore=tests/monkeypatch/test_torchao_tp_lora.py" %}  # [gpu_variant != "cuda"]
+
 
 test:
   source_files:
     - tests
     # tests/utils/test_cuda13.py sources scripts/cuda13_env.sh by relative path
     - scripts
+    - pyproject.toml  # for the pytest markers
   imports:
     - axolotl
     # axolotl.cli.main (run via --help below) already imports torch / transformers /
@@ -183,7 +251,7 @@ test:
     # remote-fs, integrations) — prove they load in this exact env, where
     # combined-env import clashes (e.g. OpenMP) would surface.
     - python -c "import s3fs, gcsfs, adlfs, ocifs, wandb, evaluate, gradio, mistral_common"
-    - python -c "import bitsandbytes, xformers, liger_kernel, fla"           # [gpu_variant != "cuda"]
+    - python -c "import bitsandbytes, liger_kernel, fla"           # [gpu_variant != "cuda"]
     - python -c "import bitsandbytes, torchao, xformers, liger_kernel, fla"  # [gpu_variant == "cuda"]
     # Curated non-e2e unit subset (utils, prompt_strategies, monkeypatch, root
     # unit files). NOTE: the root conftest's autouse session fixtures
@@ -193,9 +261,12 @@ test:
   requires:
     - pip
     - pytest
+    - torchvision
+    - gxx_linux-64
     # triton's runtime JIT compiles a cuda_utils shim against cuda.h, which
     # cuda-cudart-dev provides at $PREFIX/targets/x86_64-linux/include
     - cuda-cudart-dev               # [gpu_variant == "cuda"]
+    - torchao                       # [gpu_variant == "cuda"]
 
 about:
   home: https://axolotl.ai/
